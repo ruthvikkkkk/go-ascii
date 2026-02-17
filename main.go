@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
+	"io"
 	"os"
 
 	"github.com/nfnt/resize"
@@ -13,12 +15,17 @@ import (
 
 func main() {
 
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <image_file>")
+	outputPtr := flag.String("o", "", "Output File Name")
+	flag.Parse()
+
+	args := flag.Args()
+
+	if len(args) < 1 {
+		fmt.Println("Usage: go run main.go <image_file> [-o output_file]")
 		os.Exit(1)
 	}
 
-	filename := os.Args[1]
+	filename := args[0]
 
 	asciiChars := ".:-=+*#%@"
 	file, err := os.Open(filename)
@@ -47,6 +54,18 @@ func main() {
 
 	w, h := bounds.Max.X, bounds.Max.Y
 
+	var writer io.Writer = os.Stdout
+
+	if *outputPtr != "" {
+		f, err := os.Create(*outputPtr)
+		if err != nil {
+			fmt.Println("Error creating output file: ", err)
+			return
+		}
+		defer f.Close()
+		writer = f
+	}
+
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			c := resizedImage.At(x, y)
@@ -55,9 +74,9 @@ func main() {
 
 			i := int(gray.Y) * (len(asciiChars) - 1) / 255
 
-			fmt.Printf("%c", asciiChars[i])
+			fmt.Fprintf(writer, "%c", asciiChars[i])
 		}
-		fmt.Println()
+		fmt.Fprintln(writer)
 	}
 
 }
