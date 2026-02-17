@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"image"
@@ -16,12 +17,13 @@ import (
 func main() {
 
 	outputPtr := flag.String("o", "", "Output File Name")
+	widthPtr := flag.Int("w", 40, "Width of the output")
 	flag.Parse()
 
 	args := flag.Args()
 
 	if len(args) < 1 {
-		fmt.Println("Usage: go run main.go <image_file> [-o output_file]")
+		fmt.Println("Usage: go run main.go <image_file> [-o output_file, -w width]")
 		os.Exit(1)
 	}
 
@@ -44,7 +46,7 @@ func main() {
 		return
 	}
 
-	newWidth := uint(40)
+	newWidth := uint(*widthPtr)
 
 	ratio := float64(img.Bounds().Dy()) / float64(img.Bounds().Dx())
 	newHeight := uint(float64(newWidth) * ratio * 0.5)
@@ -66,6 +68,8 @@ func main() {
 		writer = f
 	}
 
+	bufferedWriter := bufio.NewWriter(writer)
+
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			c := resizedImage.At(x, y)
@@ -74,9 +78,11 @@ func main() {
 
 			i := int(gray.Y) * (len(asciiChars) - 1) / 255
 
-			fmt.Fprintf(writer, "%c", asciiChars[i])
+			fmt.Fprintf(bufferedWriter, "%c", asciiChars[i])
 		}
-		fmt.Fprintln(writer)
+		fmt.Fprintln(bufferedWriter)
 	}
+
+	bufferedWriter.Flush()
 
 }
