@@ -27,7 +27,7 @@ func main() {
 
 	filename := args[0]
 
-	asciiChars := ".:-=+*#%@"
+	asciiChars := " .,-=+*"
 	file, err := os.Open(filename)
 
 	if err != nil {
